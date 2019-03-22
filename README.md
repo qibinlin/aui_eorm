@@ -25,6 +25,9 @@ For details see:
 * [Definition](docs/definition.md)
 * [Queries](docs/queries.md)
 
+##Test
+* make test
+
 
 ## Other analogues
 
