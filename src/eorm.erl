@@ -16,6 +16,8 @@
 ]).
 
 init() ->
+    application:ensure_all_started(pgapp).
+
     ?MODULE = ets:new(?MODULE, [
         named_table,
         public,
@@ -118,6 +120,7 @@ def_entity(InType, InEntity) ->
         relationships => prepare_relationships(Entity),
         pk => eorm_utils:to_binary(maps:get(pk, Entity, <<"id">>))
     }),
+
     true = ets:insert(?MODULE, {{type, Type}, UpdEntity}).
 
 get_entity(Type) when is_atom(Type) ->

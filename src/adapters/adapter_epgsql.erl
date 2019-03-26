@@ -16,8 +16,13 @@ rows_to_proplist(Cols, Rows) ->
         Rows).
 
 exec_query(Conn, Query, Bindings) ->
+    QueryResult =
+        case Conn of
+            undefined -> pgapp:equery(Query, Bindings);
+            _ ->epgsql:equery(Conn, Query, Bindings)
+        end,
     case
-        epgsql:equery(Conn, Query, Bindings)
+        QueryResult
     of
         {ok, Count, Cols, Rows} ->
             {ok, {Count, rows_to_proplist(Cols, Rows)}};
