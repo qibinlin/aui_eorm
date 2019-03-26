@@ -1,2 +1,5 @@
  2019-3-22
 1. use pgapp, (https://github.com/qibinlin/pgapp)
+
+2019-3-26
+1, add delete api
