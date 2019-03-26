@@ -44,7 +44,7 @@ where table_schema=current_schema() and table_name = $1
  * **transform-from** - transformation some format to entity
  * **transform-to** - transformation of entity to some format
  * **callbacks** - callbacks for extend behaviour
-
+ 
 ## Transformations
 
 Is able to specify transformation of data after getting result from db or before

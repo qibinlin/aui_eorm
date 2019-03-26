@@ -124,10 +124,12 @@ get_entity(Type) when is_atom(Type) ->
     get_entity(atom_to_binary(Type, utf8));
 
 get_entity(Type) ->
-    case ets:lookup(?MODULE, {type, Type}) of
-        [{{type, Type}, Entity}] -> Entity;
-        _ ->
-            throw({entity_not_exists, Type})
+    case ets:member(?MODULE, {type, Type}) of
+        true ->
+            [{{type, _Type}, Entity}] =  ets:lookup(?MODULE, {type, Type}),
+            Entity;
+
+        fasle -> entity_not_exists
     end.
 
 
