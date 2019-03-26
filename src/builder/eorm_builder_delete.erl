@@ -60,7 +60,7 @@ build_expr(State) ->
   ]).
 
 get_table(#{entity := Entity, 'query' := Query} = State) ->
-  Table = eorm:get_table(Entity, {select, Query}),
+  Table = eorm:get_table(Entity, {delete, Query}),
   State#{'query' => Query#{table => Table}}.
 
 build_from_sql(#{'query' := #{table := Table}, expr := #{sql := SQL} = Expr} = State) ->
