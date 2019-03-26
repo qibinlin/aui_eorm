@@ -9,7 +9,6 @@
 -module(eorm_builder_delete).
 -autor("qibinlin@outlook.com").
 
-
 % https://www.postgresql.org/docs/11/sql-delete.html
 % [ WITH [ RECURSIVE ] with_query [, ...] ]
 % DELETE FROM [ ONLY ] table_name [ * ] [ [ AS ] alias ]
