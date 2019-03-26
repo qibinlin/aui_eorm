@@ -2,6 +2,45 @@
 
 -compile([export_all]).
 
+%% @doc
+%% add delete on 2019-3-26 by qibinlin
+%% @end
+
+delete(ReplyType, Query) when not is_map(ReplyType) ->
+    Entity = eorm:get_entity(ReplyType),
+    delete(Entity, Query);
+delete(Entity, Query) ->
+    delete(undefined, Entity, Query).
+
+delete(Connection, ReplyType, Query) when not is_map(ReplyType) ->
+    Entity = eorm:get_entity(ReplyType),
+    delete(Connection, Entity, Query);
+
+delete(Conn, Entity, InQuery) ->
+    State = eorm_builder_delete:build(Entity, InQuery),
+    #{
+        'query' := Query,
+        expr := #{
+            bindings := Bindings,
+            sql := SqlQuery
+        }
+    } = State,
+    Connection = case Conn of
+                     undefined -> eorm:get_connection(Entity, {delete, Query});
+                     _ -> Conn
+                 end,
+    case Query of
+        #{as_sql := true} -> {ok, SqlQuery};
+        _ ->
+            erlz:error_do([
+                erlz:partial(fun exec_query/3, [Connection, SqlQuery, Bindings])
+                ,fun({ID, []}) ->
+                    {ok,ID}
+                 end
+            ])
+    end.
+
+%%==================================================
 
 select(ReplyType, Query) when not is_map(ReplyType) ->
     Entity = eorm:get_entity(ReplyType),
