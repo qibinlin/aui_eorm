@@ -34,8 +34,8 @@ delete(Conn, Entity, InQuery) ->
         _ ->
             erlz:error_do([
                 erlz:partial(fun exec_query/3, [Connection, SqlQuery, Bindings])
-                ,fun({ID, []}) ->
-                    {ok,ID}
+                ,fun({Count, []}) ->
+                    {ok,Count}
                  end
             ])
     end.
