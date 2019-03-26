@@ -44,7 +44,8 @@ where table_schema=current_schema() and table_name = $1
  * **transform-from** - transformation some format to entity
  * **transform-to** - transformation of entity to some format
  * **callbacks** - callbacks for extend behaviour
- 
+ %%* **extras** -  e.g: #{conn_pool => test_pool } add on 2019-3-26 
+
 ## Transformations
 
 Is able to specify transformation of data after getting result from db or before
