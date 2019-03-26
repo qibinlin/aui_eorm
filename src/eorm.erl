@@ -16,7 +16,7 @@
 ]).
 
 init() ->
-    application:ensure_all_started(pgapp).
+    application:ensure_all_started(pgapp),
 
     ?MODULE = ets:new(?MODULE, [
         named_table,
