@@ -17,12 +17,14 @@
 
 init() ->
     application:ensure_all_started(pgapp),
-
-    ?MODULE = ets:new(?MODULE, [
-        named_table,
-        public,
-        {read_concurrency, true}
-    ]).
+    spawn(fun() ->
+        ?MODULE = ets:new(?MODULE, [
+            named_table,
+            public,
+            {read_concurrency, true}
+        ]),
+        receive X -> ok end
+    end).
 
 destroy() ->
     ets:delete(?MODULE).
