@@ -7,37 +7,6 @@
 #{fieldFixed => {fieldFixed,Field ,Value}
 #{relatedFieldFixed =>{relatedFieldFixed,RelatedField,Value}
 
-1.%% normal    {父数据源名，字段，当前数据源名，字段}；
-ConstraintField_cond =
-
-<AxTableRelationConstraint xmlns=""
- 					i:type="AxTableRelationConstraintField">
- 					<Name>InventRefId</Name>
- 					<Field>InventRefId</Field>
- 					<RelatedField>JournalId</RelatedField>
- 				</AxTableRelationConstraint>
-
-
-2.%% fieldFixed    {当数据源名，字段,值};
- ConstraintFixed_cond =
- <AxTableRelationConstraint xmlns=""
-  					i:type="AxTableRelationConstraintFixed">
-  					<Name>ItemRefType</Name>
-  					<Field>ItemRefType</Field>
-  					<Value>5</Value>
-  				</AxTableRelationConstraint>
-
-
-3. %% relatedFieldFixed  {主数据源名，字段,值}
-%% ConstraintRelatedFixed_cond =
-
-<AxTableRelationConstraint xmlns=""
-					i:type="AxTableRelationConstraintRelatedFixed">
-					<Name>Module_Extern</Name>
-					<RelatedField>Module</RelatedField>
-					<Value>1</Value>
-				</AxTableRelationConstraint>
-
 
  2019-3-22
 1. use pgapp, (https://github.com/qibinlin/pgapp)
