@@ -155,15 +155,20 @@ select_has_one_test(_Config) ->
     ok.
 
 select_relates_has_many_test(_Config) ->
-    {ok, Objs} = eorm_db:select(
-        post, #{
-            with => [
-                {post_action_log, #{where=> #{action => <<"edited">>}}}
-            ],
-            where => #{
-                user_id => 1
-            }
-        }),
+    Query = #{
+        with => [
+            {post_action_log, #{where=> #{action => <<"edited">>}}}
+        ],
+        where => #{
+            user_id => 1
+        }
+    },
+
+    {ok, SQL} = eorm_db:select(post, Query#{as_sql => true}),
+    ct:log("SQL: ~p", [SQL]),
+
+
+    {ok, Objs} = eorm_db:select(post,Query ),
     ct:log("Objs: ~p", [Objs]),
     5 = length(Objs),
 
