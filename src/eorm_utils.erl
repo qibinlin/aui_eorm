@@ -3,7 +3,20 @@
 -export([
     binary_join/2
     ,to_binary/1
+    ,to_str/1,to_lower_bin/1
 ]).
+
+to_lower_bin(Val) ->
+    to_binary(string:to_lower(eorm_utils:to_str(Val))).
+
+-spec to_str(any()) -> string().
+to_str(Val) when is_binary(Val) ->
+    binary_to_list(Val);
+
+to_str(Val) when is_list(Val) ->
+    Val;
+to_str(Val) when is_atom(Val) ->
+    atom_to_list(Val).
 
 
 -spec binary_join([binary()], binary()) -> binary().

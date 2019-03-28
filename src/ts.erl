@@ -6,21 +6,44 @@
 
 -define(MAX_CHUNKS, 2).
 
-compress(Data) ->
-    compress(Data, zip).
+t2() ->
+    {ok, Conn1} = epgsql:connect(
+        "127.0.0.1", "dbuser", "dbpassword", [
+            {database, "testdb"},
+            {timeout, 4000}
+        ]),
 
-decompress(Data) ->
-    compress(Data, unzip).
+    eorm:def_entity(purchLine, #{
+        db_connection => Conn1,
+        table => purchline,
+        fields =>[purchId,inventDimId,itemId],
+        pk => id,
+        relations =>
+            #{inventDim => [
+                    %%{Kind,Field,RelatedField }
+                    {normal ,inventDimId,inventDimId}
+                ],
 
-compress(null, _Flag) ->
-    null;
-compress(Data, Flag) ->
-    case Flag of
-        zip ->
-            zlib:zip(Data);
-        unzip ->
-            zlib:unzip(Data)
-    end.
+              purchTable => [
+                    {normal,purchId,purchId}
+                ],
+              prodTable => [
+                    {normal,inventRefId, prodId},
+                    %% {Kind,Field ,Value}
+                    {fieldFixed ,itemRefType,5}
+                ],
+              returnActionDefaults => [
+                    {normal, returnActionId,returnActionId},
+                    %% {Kind,RelatedField,Value}
+                    {relatedFieldFixed , module, 1}
+                ]
+            }
+
+    }),
+
+    eorm:get_entity(purchLine).
+
+
 
 t1() ->
     Entity = eorm:get_entity(user),
@@ -38,14 +61,30 @@ t1() ->
         table => users,
         pk => id,
         'has-many' => [post],
-        'has-one' => [email],
-        'belongs-to' => [
-            user,
-            {user, user_id}
-        ]
+        'has-one' => [email]
+
     },
     eorm:def_entity(user,Changed),
     eorm:get_entity(user).
+
+%%====================
+compress(Data) ->
+    compress(Data, zip).
+
+decompress(Data) ->
+    compress(Data, unzip).
+
+compress(null, _Flag) ->
+    null;
+compress(Data, Flag) ->
+    case Flag of
+        zip ->
+            zlib:zip(Data);
+        unzip ->
+            zlib:unzip(Data)
+    end.
+
+
 
 
 init() ->
