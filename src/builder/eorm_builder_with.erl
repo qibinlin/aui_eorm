@@ -48,11 +48,18 @@ build_with({InToType, Query}, FromEntity, FromTable, Expr) ->
             Constraints = maps:get(InToType, Relations, undefined),
             build_constraints(Constraints, {ToType, Query}, FromEntity, FromTable, Expr)
 
-    end.
+    end;
+
+build_with(InToType, FromEntity, FromTable, Expr) ->
+    build_with({InToType, #{}}, FromEntity, FromTable, Expr).
 
 %%=========add on 2019-3-28 begin==========
 
+build_constraints([], {ToType, _Query}, #{type:=FromType} = _FromEntity, _FromTable, _Expr) ->
+    throw({no_relationConstraint, {FromType, ToType}});
 
+build_constraints(undefined, {ToType, _Query}, #{type:=FromType} = _FromEntity, _FromTable, _Expr) ->
+    throw({no_relationConstraint, {FromType, ToType}});
 
 build_constraints(Constraints, {ToType, Query}, FromEntity, FromTable, Expr) ->
     #{
@@ -84,7 +91,7 @@ build_constraints(Constraints, {ToType, Query}, FromEntity, FromTable, Expr) ->
                         false ->  eorm_utils:to_binary(Value)
                     end,
                 <<FromTable/binary, ".", FieldBin/binary, " = ",
-                    ValueBin>>;
+                    ValueBin/binary>>;
 
             {relatedFieldFixed,RelatedField,Value} ->
                 RelatedFieldBin = eorm:to_lower_bin(RelatedField),
@@ -98,31 +105,25 @@ build_constraints(Constraints, {ToType, Query}, FromEntity, FromTable, Expr) ->
                     end,
 
                 <<ToTable/binary, ".", RelatedFieldBin/binary, " = ",
-                    ValueBin>>
+                    ValueBin/binary>>
 
         end
     end,
+    PreRelations =
+        lists:foldl(fun(Contraint,AccIn) ->
+            lists:append([AccIn,[FnConstraint(Contraint)] ])
+        end,[],Constraints),
 
+    PreRelationsBin = eorm_utils:binary_join(PreRelations,<<" AND ">>),
     Join = <<"left join ",
-        ToTable/binary, " on ",
-        FromTable/binary, ".", FromPk/binary, " = ",
-        ToTable/binary, ".", RelationKey/binary>>,
+        ToTable/binary, " on ", PreRelationsBin/binary>>,
 
     #{joins := Joins} = UpdExpr,
-    UpdExpr#{joins => Joins ++ [Join]};
-
-build_constraints([], {ToType, _Query}, #{type:=FromType} = _FromEntity, _FromTable, _Expr) ->
-    throw({no_relationConstraint, {FromType, ToType}});
-
-build_constraints(undefined, {ToType, _Query}, #{type:=FromType} = _FromEntity, _FromTable, _Expr) ->
-    throw({no_relationConstraint, {FromType, ToType}}).
+    UpdExpr#{joins => Joins ++ [Join]}.
 
 
 
 %%=========add on 2019-3-28 end============
-
-build_with(InToType, FromEntity, FromTable, Expr) ->
-    build_with({InToType, #{}}, FromEntity, FromTable, Expr).
 
 build_relation({'belongs-to', RelationKey}, {ToType, Query}, _FromEntity, FromTable, Expr) ->
     ToEntity = eorm:get_entity(ToType),

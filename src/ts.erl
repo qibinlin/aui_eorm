@@ -1,23 +1,54 @@
 -module(ts).
 
 -export([
-    init/0,t1/0
+    init/0,t1/0,t2/0
+
 ]).
 
 -define(MAX_CHUNKS, 2).
 
 t2() ->
+    init(),
     {ok, Conn1} = epgsql:connect(
         "127.0.0.1", "dbuser", "dbpassword", [
             {database, "testdb"},
             {timeout, 4000}
         ]),
 
+    eorm:def_entity(inventDim, #{
+        db_connection => Conn1,
+        table => inventdim,
+        fields =>[inventBatchId,inventDimId],
+        pk => recid
+    }),
+
+    eorm:def_entity(prodTable, #{
+        db_connection => Conn1,
+        table => prodTable,
+        fields =>[prodId,itemRefType],
+        pk => recid
+    }),
+
+    eorm:def_entity(purchTable, #{
+        db_connection => Conn1,
+        table => purchTable,
+        fields =>[purchId,purchName],
+        pk => recid,
+        relations =>
+          #{ purchLine => [
+                {normal,purchId,purchId}
+            ]
+
+           }
+    }),
+
+
+
     eorm:def_entity(purchLine, #{
         db_connection => Conn1,
         table => purchline,
         fields =>[purchId,inventDimId,itemId],
-        pk => id,
+        pk => recid,
         relations =>
             #{inventDim => [
                     %%{Kind,Field,RelatedField }
@@ -41,11 +72,50 @@ t2() ->
 
     }),
 
-    eorm:get_entity(purchLine).
+    eorm:get_entity(purchLine),
+
+    Query = #{
+        with => [inventDim],
+        where => #{
+            recid => 5637296829
+        }
+    },
+    {ok, SQL} = eorm_db:select(purchLine, Query#{as_sql => true}),
+    io:format("SQL: ~p ~n", [SQL]),
+
+    {ok, Obj} = eorm_db:select(purchLine, Query),
+    io:format("Obj: ~p ~n", [Obj]),
+
+    {ok, SQL1} = eorm_db:select(purchLine,
+        #{  as_sql => true,
+            with => [prodTable],
+            where => #{
+                recid => 5637296829
+            }
+        }),
+    io:format("SQL1: ~p ~n", [SQL1]),
+
+    %%
+    Query2 =#{
+
+        with => [purchLine],
+        where => #{
+            recid => 22565440432
+        }
+    },
+    {ok, SQL2} = eorm_db:select(purchTable,Query2#{as_sql => true} ),
+
+    io:format("SQL2: ~p ~n", [SQL2]),
+
+    {ok, Obj2} = eorm_db:select(purchTable, Query2),
+    io:format("Obj2: ~p ~n", [Obj2]).
 
 
 
 t1() ->
+
+    init(),
+
     Entity = eorm:get_entity(user),
 
     %%#{db_connection := Conn } = Entity,
@@ -88,6 +158,14 @@ compress(Data, Flag) ->
 
 
 init() ->
+    try
+        eorm:destroy()
+    catch
+        _:_  -> ok
+    end ,
+
+
+
     eorm:init(),
     % % TODO
     % eorm:def_db(test_db #{
