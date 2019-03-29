@@ -54,14 +54,46 @@ build_with(InToType, FromEntity, FromTable, Expr) ->
     build_with({InToType, #{}}, FromEntity, FromTable, Expr).
 
 %%=========add on 2019-3-28 begin==========
+%% @doc  @private
+fnConstraint(FromTable,ToTable,Constraint) ->
+    case Constraint of
+        {normal,Field,RelatedField } ->
+            FieldBin = eorm_utils:to_lower_bin(Field),
+            RelatedFieldBin = eorm_utils:to_lower_bin(RelatedField),
+            <<FromTable/binary, ".", FieldBin/binary, " = ",
+                ToTable/binary, ".", RelatedFieldBin/binary>>;
 
-build_constraints([], {ToType, _Query}, #{type:=FromType} = _FromEntity, _FromTable, _Expr) ->
-    throw({no_relationConstraint, {FromType, ToType}});
+        {fieldFixed,Field ,Value} ->
+            FieldBin = eorm_utils:to_lower_bin(Field),
+            ValueBin =
+                case is_list(Value) of
+                    true ->
+                        eorm_utils:to_binary(
+                            lists:concat(["'",Value,"'"])
+                        );
+                    false ->  eorm_utils:to_binary(Value)
+                end,
+            <<FromTable/binary, ".", FieldBin/binary, " = ",
+                ValueBin/binary>>;
 
-build_constraints(undefined, {ToType, _Query}, #{type:=FromType} = _FromEntity, _FromTable, _Expr) ->
-    throw({no_relationConstraint, {FromType, ToType}});
+        {relatedFieldFixed,RelatedField,Value} ->
+            RelatedFieldBin = eorm_utils:to_lower_bin(RelatedField),
+            ValueBin =
+                case is_list(Value) of
+                    true ->
+                        eorm_utils:to_binary(
+                            lists:concat(["'",Value,"'"])
+                        );
+                    false ->  eorm_utils:to_binary(Value)
+                end,
 
-build_constraints(Constraints, {ToType, Query}, FromEntity, FromTable, Expr) ->
+            <<ToTable/binary, ".", RelatedFieldBin/binary, " = ",
+                ValueBin/binary>>
+
+    end.
+
+
+build_constraints({'has-one',Constraints}, {ToType, Query}, FromEntity, FromTable, Expr) ->
     #{
         type := FromType,
         pk := FromPk
@@ -72,56 +104,47 @@ build_constraints(Constraints, {ToType, Query}, FromEntity, FromTable, Expr) ->
         expr := UpdExpr
     } = eorm_builder_select:build_expr(ToEntity, Query, Expr),
 
-    FnConstraint = fun(Constraint) ->
-        case Constraint of
-            {normal,Field,RelatedField } ->
-                FieldBin = eorm_utils:to_lower_bin(Field),
-                RelatedFieldBin = eorm_utils:to_lower_bin(RelatedField),
-                <<FromTable/binary, ".", FieldBin/binary, " = ",
-                  ToTable/binary, ".", RelatedFieldBin/binary>>;
-
-            {fieldFixed,Field ,Value} ->
-                FieldBin = eorm_utils:to_lower_bin(Field),
-                ValueBin =
-                    case is_list(Value) of
-                        true ->
-                            eorm_utils:to_binary(
-                                lists:concat(["'",Value,"'"])
-                            );
-                        false ->  eorm_utils:to_binary(Value)
-                    end,
-                <<FromTable/binary, ".", FieldBin/binary, " = ",
-                    ValueBin/binary>>;
-
-            {relatedFieldFixed,RelatedField,Value} ->
-                RelatedFieldBin = eorm:to_lower_bin(RelatedField),
-                ValueBin =
-                    case is_list(Value) of
-                        true ->
-                            eorm_utils:to_binary(
-                                lists:concat(["'",Value,"'"])
-                            );
-                        false ->  eorm_utils:to_binary(Value)
-                    end,
-
-                <<ToTable/binary, ".", RelatedFieldBin/binary, " = ",
-                    ValueBin/binary>>
-
-        end
-    end,
     PreRelations =
         lists:foldl(fun(Contraint,AccIn) ->
-            lists:append([AccIn,[FnConstraint(Contraint)] ])
-        end,[],Constraints),
+            lists:append([AccIn,[fnConstraint(FromTable,ToTable,Contraint)] ])
+                    end,[],Constraints),
+
+    PreRelationsBin = eorm_utils:binary_join(PreRelations,<<" AND ">>),
+    Join = <<" INNER JOIN ",
+        ToTable/binary, " on ", PreRelationsBin/binary>>,
+
+    #{joins := Joins} = UpdExpr,
+    UpdExpr#{joins => Joins ++ [Join]};
+
+build_constraints({'belongs-to', Constraints}, {ToType, Query}, _FromEntity, FromTable, Expr) ->
+    ToEntity = eorm:get_entity(ToType),
+    #{pk := ToPk} = ToEntity,
+
+    #{
+        'query' := #{table := ToTable},
+        expr := UpdExpr
+    } = eorm_builder_select:build_expr(ToEntity, Query, Expr),
+
+
+    PreRelations =
+        lists:foldl(fun(Contraint,AccIn) ->
+            lists:append([AccIn,[fnConstraint(FromTable,ToTable,Contraint)] ])
+                    end,[],Constraints),
 
     PreRelationsBin = eorm_utils:binary_join(PreRelations,<<" AND ">>),
     Join = <<"left join ",
         ToTable/binary, " on ", PreRelationsBin/binary>>,
 
+
     #{joins := Joins} = UpdExpr,
-    UpdExpr#{joins => Joins ++ [Join]}.
+    UpdExpr#{joins => Joins ++ [Join]};
+
+build_constraints({'has-many', RelationKey}, {ToType, Query}, _FromEntity, _FromTable, #{extra_query := ExtraQuery} = Expr) ->
+    Expr#{extra_query => ExtraQuery ++ [{ToType, RelationKey, Query}]};
 
 
+build_constraints(undefined, {ToType, _Query}, #{type:=FromType} = _FromEntity, _FromTable, _Expr) ->
+    throw({no_relationConstraint, {FromType, ToType}}).
 
 %%=========add on 2019-3-28 end============
 

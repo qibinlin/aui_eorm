@@ -11,8 +11,13 @@ new(Type, Attrs) ->
         linked => #{}
     }.
 
-id(#{attributes := Attrs} = _Obj) ->
-    maps:get(<<"id">>, Attrs).
+id(#{attributes := Attrs,type := Type} = _Obj) ->
+    %% add on 2019-3-29 by linqibin --begin
+    Entity = eorm:get_entity(Type),
+    #{pk := Pk} = Entity ,
+    maps:get(Pk, Attrs).
+    %% maps:get(<<"id">>, Attrs).
+   %% add on 2019-3-29 by linqibin --end
 
 type(Obj) ->
     maps:get(type, Obj).
