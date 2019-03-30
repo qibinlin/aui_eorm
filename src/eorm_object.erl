@@ -11,13 +11,8 @@ new(Type, Attrs) ->
         linked => #{}
     }.
 
-id(#{attributes := Attrs,type := Type} = _Obj) ->
-    %% add on 2019-3-29 by linqibin --begin
-    Entity = eorm:get_entity(Type),
-    #{pk := Pk} = Entity ,
-    maps:get(Pk, Attrs).
-    %% maps:get(<<"id">>, Attrs).
-   %% add on 2019-3-29 by linqibin --end
+id(#{attributes := Attrs} = _Obj) ->
+    maps:get(<<"id">>, Attrs).
 
 type(Obj) ->
     maps:get(type, Obj).
@@ -46,10 +41,22 @@ attr(Key, Obj, DefValue) ->
     get_attr(Key, Obj, DefValue).
 
 get_attr(Key, #{attributes:=Attrs} = _Obj) ->
-    maps:get(Key, Attrs).
+    '-get_attr'(Key,Attrs).
+    %% maps:get(eorm_utils:to_binary(Key), Attrs).
 
 get_attr(Key, #{attributes:=Attrs}, DefValue) ->
-    maps:get(Key, Attrs, DefValue).
+    case '-get_attr'(Key,Attrs) of
+        undefined -> DefValue;
+        Val -> Val
+    end.
+    %% maps:get(eorm_utils:to_binary(Key), Attrs, DefValue).
+
+'-get_attr'(Key,Attrs) ->
+    KeyBin = eorm_utils:to_binary(Key),
+    case maps:get(KeyBin, Attrs,undefined) of
+        undefined -> maps:get(eorm_utils:to_lower_bin(Key), Attrs,undefined);
+        Val -> Val
+    end.
 
 set_attr(Key, Value, #{attributes := Attr} = Obj) ->
     Obj#{attributes => Attr#{Key => Value}}.

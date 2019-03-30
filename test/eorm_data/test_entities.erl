@@ -141,4 +141,60 @@ init() ->
         pk => id,
         'has-one' => [post]
     }),
+
+    aui_entity(),
+
     ok.
+
+
+%% @doc @private
+aui_entity() ->
+
+    {ok, Conn1} = epgsql:connect(
+        "127.0.0.1", "dbuser", "dbpassword", [
+            {database, "testdb"},
+            {timeout, 4000}
+        ]),
+
+    eorm:def_entity(inventDim, #{
+        db_connection => Conn1,
+        table => inventdim,
+        fields =>[inventBatchId,inventDimId],
+        pk => recid
+    }),
+
+    eorm:def_entity(prodTable, #{
+        db_connection => Conn1,
+        table => prodTable,
+        fields =>[prodId,itemRefType],
+        pk => recid
+    }),
+
+    eorm:def_entity(purchTable, #{
+        db_connection => Conn1,
+        table => purchTable,
+        fields =>[purchId,purchName],
+        pk => recid,
+        relations =>      %%{Kind,Field,RelatedField }
+        #{ purchLine => {'has-many',{purchId,purchId}}}
+    }),
+
+
+
+    eorm:def_entity(purchLine, #{
+        db_connection => Conn1,
+        table => purchline,
+        fields =>[purchId,inventDimId,itemId],
+        pk => recid,
+        relations =>
+        #{  inventDim => {'has-one' , [
+            %%{Kind,Field,RelatedField }
+            {normal ,inventDimId,inventDimId}
+        ]},
+
+            purchTable => {'belongs-to', [
+                {normal,purchId,purchId}
+            ]}
+        }
+
+    }).

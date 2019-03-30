@@ -139,8 +139,10 @@ build_constraints({'belongs-to', Constraints}, {ToType, Query}, _FromEntity, Fro
     #{joins := Joins} = UpdExpr,
     UpdExpr#{joins => Joins ++ [Join]};
 
-build_constraints({'has-many', RelationKey}, {ToType, Query}, _FromEntity, _FromTable, #{extra_query := ExtraQuery} = Expr) ->
-    Expr#{extra_query => ExtraQuery ++ [{ToType, RelationKey, Query}]};
+%%{Kind,Field,RelatedField }
+build_constraints({'has-many', {Field,RelationKey} }, {ToType, Query}, _FromEntity, _FromTable, #{extra_query := ExtraQuery} = Expr) ->
+    Expr#{extra_query => ExtraQuery ++ [{ToType, RelationKey, Query}]
+        ,extra_info => #{id_field => Field}};
 
 
 build_constraints(undefined, {ToType, _Query}, #{type:=FromType} = _FromEntity, _FromTable, _Expr) ->

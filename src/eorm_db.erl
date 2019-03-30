@@ -98,8 +98,19 @@ select_relates(_Connection, _, []) ->
     {ok, []};
 select_relates(_Connection, #{expr:=#{extra_query:=[]}}, Objs) ->
     {ok, Objs};
-select_relates(Connection, #{expr:=#{extra_query:=ExtraQuery}} = _State, Objs) ->
-    Ids = lists:map(fun eorm_object:id/1, Objs),
+select_relates(Connection, #{expr:=#{extra_query:=ExtraQuery,extra_info :=ExtraInfo}} = _State, Objs) ->
+    IdField =
+        case maps:get(id_field, ExtraInfo,undefined) of
+            undefined -> <<"id">> ;
+            Field -> eorm_utils:to_lower_bin(Field)
+
+        end,
+    Ids =
+        lists:map(fun(Obj) ->
+            eorm_object:get_attr(IdField,Obj)
+        end, Objs),
+
+    %%Ids = lists:map(fun eorm_object:id/1, Objs),
 
     erlz:error_foldlM(
         fun({Type, RelationKey, Query}, InObjs) ->
@@ -107,13 +118,13 @@ select_relates(Connection, #{expr:=#{extra_query:=ExtraQuery}} = _State, Objs) -
             UpdQuery = Query#{where => Where#{{RelationKey, in} => Ids}},
             erlz:error_do([
                 fun() -> select(Connection, Type, UpdQuery) end,
-                erlz:partial(fun append_relates/3, [InObjs, RelationKey, '_'])
+                erlz:partial(fun append_relates/3, [InObjs, {IdField,RelationKey}, '_'])
             ])
         end,
         Objs,
         ExtraQuery).
 
-append_relates(InObjs, RelatesKey, RelatesObjs) ->
+append_relates(InObjs,  {IdField,RelatesKey}, RelatesObjs) ->
     % by relations
     OutObjs = lists:foldl(
         fun(RelatedObj, Objs) ->
@@ -121,7 +132,7 @@ append_relates(InObjs, RelatesKey, RelatesObjs) ->
             lists:map(
                 fun(Obj) ->
                     case
-                        eorm_object:id(Obj) ==
+                        eorm_object:get_attr( IdField ,Obj) ==
                         eorm_object:get_attr(RelatesKey, RelatedObj)
                     of
                         true -> eorm_object:append_linked(RelatedObj, Obj);

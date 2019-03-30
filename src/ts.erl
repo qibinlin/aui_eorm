@@ -34,8 +34,8 @@ t2_1() ->
         table => purchTable,
         fields =>[purchId,purchName],
         pk => recid,
-        relations =>
-            #{ purchLine => {'has-many',purchId}}
+        relations =>      %%{Kind,Field,RelatedField }
+            #{ purchLine => {'has-many',{purchId,purchId}}}
     }),
 
 
@@ -80,7 +80,10 @@ t2() ->
     %% purchTable
     Query2 =#{
 
-        with => [purchLine],
+        with => [
+            {purchLine,#{with =>[inventDim]}
+            }
+        ],
         where => #{
             recid => 22565440432
         }

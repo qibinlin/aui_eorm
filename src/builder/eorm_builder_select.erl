@@ -24,6 +24,7 @@ new_expr() ->
         ,where => []
         ,bindings => []
         ,extra_query => []
+        ,extra_info => #{} %% add on 2019-3-30 by linqibin
         ,sql => [<<"select">>]
     }.
 
