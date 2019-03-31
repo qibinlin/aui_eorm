@@ -77,9 +77,20 @@ unzip_attrs_with(Ks, Obj) ->
     NewAttrs = attrs_with(Ks, Obj),
     lists:unzip(maps:to_list(NewAttrs)).
 
-append_linked(LinkObjs, ToObj) when is_list(LinkObjs) ->
+
+append_linked(LinkObjs, ToObj_in) when is_list(LinkObjs) ->
+    {ToObj,MasterTrackingId} =
+        case get_attr(<<"MasterTrackingId">>,ToObj_in,nil) of
+            nil ->
+                TracingId = eorm_kv:masterTrackingId(),
+                {set_attr(<<"MasterTrackingId">>,TracingId,ToObj_in),TracingId};
+            TracingId -> {ToObj_in,TracingId}
+
+        end,
+
     UpdLinked= lists:foldl(
-        fun(LinkObj, Acc) ->
+        fun(LinkObj_orig, Acc) ->
+            LinkObj =  set_attr(<<"MasterTrackingId">>,MasterTrackingId,LinkObj_orig),
             LinkType = type(LinkObj),
             Linked = maps:get(LinkType, Acc, []),
             Acc#{LinkType => Linked ++ [LinkObj]}

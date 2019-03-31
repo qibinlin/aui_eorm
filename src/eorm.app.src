@@ -2,6 +2,7 @@
     {description, "Erlang ORM"},
     {vsn, "0.1"},
     {registered, []},
+    {mod, {eorm_app, []}},
     {applications, [
         kernel,
         stdlib,

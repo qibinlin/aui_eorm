@@ -5,8 +5,10 @@
 -compile([export_all]).
 
 init_per_suite(Config) ->
+
     application:ensure_all_started(eorm),
     application:ensure_all_started(epgsql),
+
     init_db(),
     SelfPid = self(),
     Pid = spawn(fun() ->
