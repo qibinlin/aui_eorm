@@ -18,9 +18,12 @@ build(#{
         entity := FromEntity,
         'query' := #{with := InWith, table := FromTable},
         expr := InExpr} = State) ->
+
+    #{'query' := Query } = State,
+
     UpdExpr = lists:foldl(
         fun(WithItem, Expr) ->
-            build_with(WithItem, FromEntity, FromTable, Expr)
+            build_with(eorm:get_type(WithItem,Query), FromEntity, FromTable, Expr)
         end,
         InExpr,
         InWith),
@@ -36,7 +39,9 @@ build_sql(#{expr:=#{sql := SQL, joins := Joins} = Expr} = State) ->
 
 
 %% @doc modified on 2019-3-28 by linqibin
-build_with({InToType, Query}, FromEntity, FromTable, Expr) ->
+build_with({InToType_Orig, Query}, FromEntity, FromTable, Expr) ->
+    InToType = eorm:get_type(InToType_Orig, Query),
+
     case maps:get(relations,FromEntity,undefined) of
         undefined ->
             #{relationships := Relationships} = FromEntity,
@@ -98,7 +103,7 @@ build_constraints({'has-one',Constraints}, {ToType, Query}, FromEntity, FromTabl
         type := FromType,
         pk := FromPk
     } = FromEntity,
-    ToEntity = eorm:get_entity(ToType),
+    ToEntity = eorm:get_entity(ToType,Query),
     #{
         'query' := #{table := ToTable},
         expr := UpdExpr
@@ -117,7 +122,7 @@ build_constraints({'has-one',Constraints}, {ToType, Query}, FromEntity, FromTabl
     UpdExpr#{joins => Joins ++ [Join]};
 
 build_constraints({'belongs-to', Constraints}, {ToType, Query}, _FromEntity, FromTable, Expr) ->
-    ToEntity = eorm:get_entity(ToType),
+    ToEntity = eorm:get_entity(ToType,Query),
     #{pk := ToPk} = ToEntity,
 
     #{
@@ -151,7 +156,7 @@ build_constraints(undefined, {ToType, _Query}, #{type:=FromType} = _FromEntity, 
 %%=========add on 2019-3-28 end============
 
 build_relation({'belongs-to', RelationKey}, {ToType, Query}, _FromEntity, FromTable, Expr) ->
-    ToEntity = eorm:get_entity(ToType),
+    ToEntity = eorm:get_entity(ToType,Query),
     #{pk := ToPk} = ToEntity,
 
     #{
@@ -173,7 +178,7 @@ build_relation({'has-one', RelationKey}, {ToType, Query}, FromEntity, FromTable,
         type := FromType,
         pk := FromPk
     } = FromEntity,
-    ToEntity = eorm:get_entity(ToType),
+    ToEntity = eorm:get_entity(ToType,Query),
     #{
         'query' := #{table := ToTable},
         expr := UpdExpr

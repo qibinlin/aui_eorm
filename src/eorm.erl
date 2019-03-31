@@ -9,7 +9,7 @@
     ,get_table/2
     ,get_connection/2
     ,def_entity/2
-    ,get_entity/1
+    ,get_entity/2,get_type/2,get_dataSourceName_by_type/2
     ,transform_to/2
     ,transform_from/2
 
@@ -23,7 +23,7 @@ init() ->
             public,
             {read_concurrency, true}
         ]),
-        receive X -> ok end
+        receive X -> X,ok end
     end).
 
 destroy() ->
@@ -125,10 +125,53 @@ def_entity(InType, InEntity) ->
 
     true = ets:insert(?MODULE, {{type, Type}, UpdEntity}).
 
-get_entity(Type) when is_atom(Type) ->
-    get_entity(atom_to_binary(Type, utf8));
 
-get_entity(Type) ->
+get_type(DataSourceName,Query) when is_map(Query)->
+    case maps:get(meta,Query,nil) of
+        nil -> DataSourceName;
+        Meta ->
+            case maps:get(dataSources,Meta,nil) of
+                nil ->  DataSourceName ;
+                DataSources ->
+                    Type = proplists:get_value(DataSourceName,DataSources),
+                    Type
+            end
+
+    end.
+
+get_dataSourceName_by_type(Type,Query) when is_map(Query)->
+    case maps:get(meta,Query,nil) of
+        nil -> undefined ;
+        Meta ->
+            case maps:get(dataSources,Meta,nil) of
+                nil ->  undefined ;
+                DataSources ->
+                    '-get_dataSourceName_by_type'(DataSources,Type)
+            end
+
+    end;
+get_dataSourceName_by_type(_Type,_Query) -> undefined.
+
+%% @doc @private
+'-get_dataSourceName_by_type'([{K,V} | T],Type) ->
+    VBin = eorm_utils:to_binary(V),
+    TypeBin= eorm_utils:to_binary(Type),
+    if
+        VBin =:= TypeBin -> eorm_utils:to_binary(K);
+        true -> '-get_dataSourceName_by_type'(T,Type)
+    end;
+
+'-get_dataSourceName_by_type'([],_Type) -> undefined.
+
+get_entity(DataSourceName,Query) when is_map(Query)->
+    Type = get_type(DataSourceName,Query),
+    '-get_entity'(Type).
+
+%% @doc @private
+'-get_entity'(Type) when is_atom(Type) ->
+    '-get_entity'(atom_to_binary(Type, utf8));
+
+'-get_entity'(Type) ->
     case ets:member(?MODULE, {type, Type}) of
         true ->
             [{{type, _Type}, Entity}] =  ets:lookup(?MODULE, {type, Type}),
@@ -148,7 +191,7 @@ transform_from(Format, Obj) ->
 
 
 transform(TransformKey, Format, #{type := Type} = Obj) ->
-    Entity = get_entity(Type),
+    Entity = '-get_entity'(Type),
     transform(TransformKey, Format, Obj, Entity).
 
 transform(TransformKey, Format, Obj, Entity) ->

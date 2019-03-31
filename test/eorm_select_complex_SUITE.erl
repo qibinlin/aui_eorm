@@ -21,15 +21,20 @@ end_per_suite(Config) ->
 
 select_belongs_to_test(_Config) ->
     Query = #{
-        with => [purchTable,inventDim],
+        with => ["PurchTable","InventDimPurch"],
         where => #{
             recid => 5637296829
-        }
+        },
+        meta => #{dataSources =>[
+            {"PurchTable",purchTable},
+            {"InventDimPurch",inventDim},
+            {"PurchLine",purchLine}
+        ] }
     },
-    {ok, SQL} = eorm_db:select(purchLine, Query#{as_sql => true}),
+    {ok, SQL} = eorm_db:select("PurchLine", Query#{as_sql => true}),
     ct:log("SQL: ~p", [SQL]),
 
-    {ok, Obj} = eorm_db:select(purchLine, Query),
+    {ok, Obj} = eorm_db:select("PurchLine", Query),
     ct:log("Obj: ~p", [Obj]),
     ok.
 

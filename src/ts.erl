@@ -1,7 +1,7 @@
 -module(ts).
 
 -export([
-    t1/0,t2/0
+    t1/0,t2/0,t3/0
 
 ]).
 
@@ -57,6 +57,30 @@ t2_1() ->
             }
 
     }).
+
+t3() ->
+    ts_helper:init_per_suite([]),
+
+    t2_1(),
+
+    Query = #{
+        with => ["PurchTable","InventDimPurch"],
+        where => #{
+            recid => 5637296829
+        },
+        meta => #{dataSources =>[
+            {"PurchTable",purchTable},
+            {"InventDimPurch",inventDim},
+            {"PurchLine",purchLine}
+        ] }
+    },
+    {ok, SQL} = eorm_db:select("PurchLine", Query#{as_sql => true}),
+    io:format("SQL: ~p", [SQL]),
+
+    {ok, Obj} = eorm_db:select("PurchLine", Query),
+    io:format("Obj: ~p", [Obj]),
+    ok.
+
 
 t2() ->
     ts_helper:init_per_suite([]),

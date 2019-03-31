@@ -3,10 +3,13 @@
 -compile([export_all]).
 
 new(Type, Attrs) when is_atom(Type) ->
-    new(atom_to_binary(Type, utf8), Attrs);
-new(Type, Attrs) ->
+    new({Type,undefined}, Attrs);
+new({Type,DataSourceName}, Attrs) when is_atom(Type) ->
+    new({atom_to_binary(Type, utf8) ,DataSourceName}, Attrs);
+new({Type,DataSourceName}, Attrs) ->
     #{
         type => Type,
+        dataSourceName => DataSourceName ,
         attributes => Attrs,
         linked => #{}
     }.
