@@ -55,7 +55,14 @@ select_has_one_test(_Config) ->
 
     {ok, Obj} = eorm_db:select(purchLine, Query),
     ct:log("Obj: ~p", [Obj]),
+
+    ModelCollections = eorm_object:to_modelCollections([Obj]),
+
+    ct:log("ModelCollections: ~p", [ModelCollections]),
+
     ok.
+
+
 
 select_relates_has_many_test(_Config) ->
     Query =#{
@@ -72,5 +79,10 @@ select_relates_has_many_test(_Config) ->
 
     {ok, Obj} = eorm_db:select(purchTable, Query),
     ct:log("Obj: ~p", [Obj]),
+
+
+    ModelCollections = eorm_object:to_modelCollections([Obj]),
+
+    ct:log("ModelCollections: ~p", [ModelCollections]),
 
     ok.

@@ -186,7 +186,7 @@ select_relates_has_many_test(_Config) ->
         }),
     ct:log("UserObj: ~p", [UserObj]),
 
-    ModelCollections = eorm_object:to_modelCollections(UserObj),
+    ModelCollections = eorm_object:to_modelCollections([UserObj]),
 
     ct:log("UserObj ModelCollections: ~p", [ModelCollections]),
 
