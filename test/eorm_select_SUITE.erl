@@ -170,6 +170,11 @@ select_relates_has_many_test(_Config) ->
 
     {ok, Objs} = eorm_db:select(post,Query ),
     ct:log("Objs: ~p", [Objs]),
+
+    ModelCollectionspost = eorm_object:to_modelCollections(Objs),
+
+    ct:log("post ModelCollections: ~p", [ModelCollectionspost]),
+
     5 = length(Objs),
 
     {ok, [UserObj]} = eorm_db:select(
@@ -180,6 +185,11 @@ select_relates_has_many_test(_Config) ->
             }
         }),
     ct:log("UserObj: ~p", [UserObj]),
+
+    ModelCollections = eorm_object:to_modelCollections(UserObj),
+
+    ct:log("UserObj ModelCollections: ~p", [ModelCollections]),
+
     ok.
 
 select_and_transformation_test(_Config) ->

@@ -36,6 +36,10 @@ select_belongs_to_test(_Config) ->
 
     {ok, Obj} = eorm_db:select("PurchLine", Query),
     ct:log("Obj: ~p", [Obj]),
+
+    ModelCollections = eorm_object:to_modelCollections(Obj),
+
+    ct:log("ModelCollections: ~p", [ModelCollections]),
     ok.
 
 

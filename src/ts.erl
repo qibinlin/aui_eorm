@@ -79,6 +79,11 @@ t3() ->
 
     {ok, Obj} = eorm_db:select("PurchLine", Query),
     io:format("Obj: ~p", [Obj]),
+
+    ModelCollections = eorm_object:to_modelCollections(Obj),
+
+    io:format("ModelCollections: ~p", [ModelCollections]),
+
     ok.
 
 

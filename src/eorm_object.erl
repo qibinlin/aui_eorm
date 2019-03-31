@@ -2,6 +2,48 @@
 
 -compile([export_all]).
 
+%%==============
+to_modelCollections(Objs) when is_list(Objs) ->
+    lists:foldl(fun(Obj,AccIn) ->
+         '-to_modelCollection'(Obj,AccIn)
+       end,#{},Objs).
+
+%% @doc @private
+'-to_modelCollection'([],AccIn) -> AccIn;
+'-to_modelCollection'([Obj | Objs],AccIn) ->
+    NewAccIn = '-to_modelCollection'(Obj,AccIn),
+    '-to_modelCollection'(Objs,NewAccIn);
+
+'-to_modelCollection'(Obj,AccIn) when is_map(Obj) ->
+    #{
+        type := Type,
+        dataSourceName := DataSourceName ,
+        attributes := Attrs,
+        linked := Linked
+    } = Obj,
+
+    NewAccIn =
+        case maps:is_key(DataSourceName, AccIn) of
+            true ->
+                ModelCollection = maps:get(DataSourceName,AccIn),
+                #{items :=Items} = ModelCollection,
+                maps:put( DataSourceName, ModelCollection#{items => Items ++ [Attrs]},AccIn);
+            false ->
+                maps:put( DataSourceName,#{items => [Attrs],type => Type},AccIn)
+
+        end,
+
+    '-to_modelCollection_by_linked'(maps:values(Linked),NewAccIn).
+
+%% @doc @private
+'-to_modelCollection_by_linked'([],AccIn) ->
+    AccIn;
+'-to_modelCollection_by_linked'([Obj|Objs],AccIn) ->
+    NewAccIin = '-to_modelCollection'(Obj,AccIn),
+    '-to_modelCollection_by_linked'(Objs,NewAccIin).
+
+%%==============
+
 new(Type, Attrs) when is_atom(Type) ->
     new({Type,undefined}, Attrs);
 new({Type,DataSourceName}, Attrs) when is_atom(Type) ->
@@ -13,6 +55,9 @@ new({Type,DataSourceName}, Attrs) ->
         attributes => Attrs,
         linked => #{}
     }.
+
+dataSourceName(#{dataSourceName := DataSourceName} = _Obj) ->
+    DataSourceName.
 
 id(#{attributes := Attrs} = _Obj) ->
     maps:get(<<"id">>, Attrs).
