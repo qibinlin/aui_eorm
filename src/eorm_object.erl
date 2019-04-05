@@ -3,18 +3,18 @@
 -compile([export_all]).
 
 %%==============
-to_modelCollections(Objs) when is_list(Objs) ->
+to_dataSet(Objs) when is_list(Objs) ->
     lists:foldl(fun(Obj,AccIn) ->
-         '-to_modelCollection'(Obj,AccIn)
+         '-to_dataSet'(Obj,AccIn)
        end,#{},Objs).
 
 %% @doc @private
-'-to_modelCollection'([],AccIn) -> AccIn;
-'-to_modelCollection'([Obj | Objs],AccIn) ->
-    NewAccIn = '-to_modelCollection'(Obj,AccIn),
-    '-to_modelCollection'(Objs,NewAccIn);
+'-to_dataSet'([],AccIn) -> AccIn;
+'-to_dataSet'([Obj | Objs],AccIn) ->
+    NewAccIn = '-to_dataSet'(Obj,AccIn),
+    '-to_dataSet'(Objs,NewAccIn);
 
-'-to_modelCollection'(Obj,AccIn) when is_map(Obj) ->
+'-to_dataSet'(Obj,AccIn) when is_map(Obj) ->
     #{
         type := Type,
         dataSourceName := DataSourceName ,
@@ -33,14 +33,14 @@ to_modelCollections(Objs) when is_list(Objs) ->
 
         end,
 
-    '-to_modelCollection_by_linked'(maps:values(Linked),NewAccIn).
+    '-to_dataSet_by_linked'(maps:values(Linked),NewAccIn).
 
 %% @doc @private
-'-to_modelCollection_by_linked'([],AccIn) ->
+'-to_dataSet_by_linked'([],AccIn) ->
     AccIn;
-'-to_modelCollection_by_linked'([Obj|Objs],AccIn) ->
-    NewAccIin = '-to_modelCollection'(Obj,AccIn),
-    '-to_modelCollection_by_linked'(Objs,NewAccIin).
+'-to_dataSet_by_linked'([Obj|Objs],AccIn) ->
+    NewAccIin = '-to_dataSet'(Obj,AccIn),
+    '-to_dataSet_by_linked'(Objs,NewAccIin).
 
 %%==============
 

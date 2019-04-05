@@ -9,7 +9,7 @@
     ,get_table/2
     ,get_connection/2
     ,def_entity/2
-    ,get_entity/2,get_type/2,get_dataSourceName_by_type/2
+    ,get_entity/2,get_entity/1,get_type/2,get_dataSourceName_by_type/2
     ,transform_to/2
     ,transform_from/2
 
@@ -162,6 +162,9 @@ get_dataSourceName_by_type(Type,_Query) -> eorm_utils:to_binary(Type).
     end;
 
 '-get_dataSourceName_by_type'([],Type) -> eorm_utils:to_binary(Type).
+
+get_entity(Type) ->
+    get_entity(Type,#{}).
 
 get_entity(DataSourceName,Query) when is_map(Query)->
     Type = get_type(DataSourceName,Query),

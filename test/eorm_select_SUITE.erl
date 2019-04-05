@@ -171,9 +171,9 @@ select_relates_has_many_test(_Config) ->
     {ok, Objs} = eorm_db:select(post,Query ),
     ct:log("Objs: ~p", [Objs]),
 
-    ModelCollectionspost = eorm_object:to_modelCollections(Objs),
+    DataSetPost = eorm_object:to_dataSet(Objs),
 
-    ct:log("post ModelCollections: ~p", [ModelCollectionspost]),
+    ct:log("post ModelCollections: ~p", [DataSetPost]),
 
     5 = length(Objs),
 
@@ -186,9 +186,9 @@ select_relates_has_many_test(_Config) ->
         }),
     ct:log("UserObj: ~p", [UserObj]),
 
-    ModelCollections = eorm_object:to_modelCollections([UserObj]),
+    DataSet = eorm_object:to_dataSet([UserObj]),
 
-    ct:log("UserObj ModelCollections: ~p", [ModelCollections]),
+    ct:log("UserObj ModelCollections: ~p", [DataSet]),
 
     ok.
 

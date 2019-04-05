@@ -187,10 +187,10 @@ aui_entity() ->
         fields =>[purchId,inventDimId,itemId],
         pk => recid,
         relations =>
-        #{  inventDim => {'has-one' , [
-            %%{Kind,Field,RelatedField }
-            {normal ,inventDimId,inventDimId}
-        ]},
+            #{  inventDim => {'has-one' , [
+                %%{Kind,Field,RelatedField }
+                {normal ,inventDimId,inventDimId}
+            ]},
 
             purchTable => {'belongs-to', [
                 {normal,purchId,purchId}

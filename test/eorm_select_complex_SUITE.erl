@@ -37,9 +37,9 @@ select_belongs_to_test(_Config) ->
     {ok, Obj} = eorm_db:select("PurchLine", Query),
     ct:log("Obj: ~p", [Obj]),
 
-    ModelCollections = eorm_object:to_modelCollections(Obj),
+    DataSet = eorm_object:to_dataSet(Obj),
 
-    ct:log("ModelCollections: ~p", [ModelCollections]),
+    ct:log("ModelCollections: ~p", [DataSet]),
     ok.
 
 
@@ -56,9 +56,9 @@ select_has_one_test(_Config) ->
     {ok, Obj} = eorm_db:select(purchLine, Query),
     ct:log("Obj: ~p", [Obj]),
 
-    ModelCollections = eorm_object:to_modelCollections([Obj]),
+    DataSet = eorm_object:to_dataSet([Obj]),
 
-    ct:log("ModelCollections: ~p", [ModelCollections]),
+    ct:log("ModelCollections: ~p", [DataSet]),
 
     ok.
 
@@ -81,8 +81,8 @@ select_relates_has_many_test(_Config) ->
     ct:log("Obj: ~p", [Obj]),
 
 
-    ModelCollections = eorm_object:to_modelCollections([Obj]),
+    DataSet = eorm_object:to_dataSet([Obj]),
 
-    ct:log("ModelCollections: ~p", [ModelCollections]),
+    ct:log("ModelCollections: ~p", [DataSet]),
 
     ok.
