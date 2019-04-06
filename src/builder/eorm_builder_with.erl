@@ -23,7 +23,15 @@ build(#{
 
     UpdExpr = lists:foldl(
         fun(WithItem, Expr) ->
-            build_with(eorm:get_type(WithItem,Query), FromEntity, FromTable, Expr)
+            case WithItem of
+                {Name,WithQuery} ->
+                    ToType = eorm:get_type(Name,Query),
+                    build_with({ToType,WithQuery}, FromEntity, FromTable, Expr);
+                Name ->
+                    ToType = eorm:get_type(Name,Query),
+                    build_with(ToType, FromEntity, FromTable, Expr)
+            end
+            
         end,
         InExpr,
         InWith),

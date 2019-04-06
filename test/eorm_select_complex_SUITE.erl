@@ -21,6 +21,21 @@ end_per_suite(Config) ->
 
 select_belongs_to_test(_Config) ->
     Query = #{
+        fields =>[purchId,itemId],
+        with => [
+            {"PurchTable",#{ fields =>[purchName]}},
+            {"InventDimPurch",#{fields =>[inventBatchId]}}],
+        where => #{
+            recid => 5637296829
+        },
+        meta => #{dataSources =>[
+            {"PurchTable",purchTable},
+            {"InventDimPurch",inventDim},
+            {"PurchLine",purchLine}
+        ] }
+    },
+
+    Query_ok = #{
         with => ["PurchTable","InventDimPurch"],
         where => #{
             recid => 5637296829
