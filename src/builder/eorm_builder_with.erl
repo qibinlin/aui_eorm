@@ -52,10 +52,27 @@ build_with({InToType_Orig, Query}, FromEntity, FromTable, Expr) ->
 
     case maps:get(relations,FromEntity,undefined) of
         undefined ->
-            #{relationships := Relationships} = FromEntity,
-            ToType = eorm_utils:to_binary(InToType),
-            Relation = maps:get(ToType, Relationships, undefined),
-            build_relation(Relation, {ToType, Query}, FromEntity, FromTable, Expr);
+            ToEntity = eorm:get_entity(InToType,Query),
+            case maps:get(relations,ToEntity,undefined) of
+                undefined ->
+                    %%
+                    #{relationships := Relationships} = FromEntity,
+                    ToType = eorm_utils:to_binary(InToType),
+                    Relation = maps:get(ToType, Relationships, undefined),
+                    build_relation(Relation, {ToType, Query}, FromEntity, FromTable, Expr);
+                Relations ->
+                    ToType = eorm_utils:to_binary(InToType),
+                    #{type := FromType } = FromEntity,
+
+                    %% {'ExactlyOne',Constraints} =
+                    {_, [
+                        {normal,Field,ReleateField}
+                    ]} = maps:get(eorm_utils:to_atom(FromType), Relations, undefined),
+
+                    build_constraints({'ZeroMore', {Field,ReleateField}}, {ToType, Query}, FromEntity, FromTable, Expr)
+
+            end;
+
         Relations ->
             ToType = eorm_utils:to_binary(InToType),
             Constraints = maps:get(InToType, Relations, undefined),
@@ -105,8 +122,8 @@ fnConstraint(FromTable,ToTable,Constraint) ->
 
     end.
 
-
-build_constraints({'has-one',Constraints}, {ToType, Query}, FromEntity, FromTable, Expr) ->
+%% 'has-one' 0..1
+build_constraints({'ZeroOne',Constraints}, {ToType, Query}, FromEntity, FromTable, Expr) ->
     #{
         type := FromType,
         pk := FromPk
@@ -123,13 +140,15 @@ build_constraints({'has-one',Constraints}, {ToType, Query}, FromEntity, FromTabl
                     end,[],Constraints),
 
     PreRelationsBin = eorm_utils:binary_join(PreRelations,<<" AND ">>),
-    Join = <<" INNER JOIN ",
+    %% INNER JOIN
+    Join = <<" left join  ",
         ToTable/binary, " on ", PreRelationsBin/binary>>,
 
     #{joins := Joins} = UpdExpr,
     UpdExpr#{joins => Joins ++ [Join]};
 
-build_constraints({'belongs-to', Constraints}, {ToType, Query}, _FromEntity, FromTable, Expr) ->
+%% 'belongs-to' : 1
+build_constraints({'ExactlyOne', Constraints}, {ToType, Query}, _FromEntity, FromTable, Expr) ->
     ToEntity = eorm:get_entity(ToType,Query),
     #{pk := ToPk} = ToEntity,
 
@@ -145,15 +164,15 @@ build_constraints({'belongs-to', Constraints}, {ToType, Query}, _FromEntity, Fro
                     end,[],Constraints),
 
     PreRelationsBin = eorm_utils:binary_join(PreRelations,<<" AND ">>),
-    Join = <<"left join ",
+    Join = <<" INNER JOIN ",
         ToTable/binary, " on ", PreRelationsBin/binary>>,
 
 
     #{joins := Joins} = UpdExpr,
     UpdExpr#{joins => Joins ++ [Join]};
 
-%%{Kind,Field,RelatedField }
-build_constraints({'has-many', {Field,RelationKey} }, {ToType, Query}, _FromEntity, _FromTable, #{extra_query := ExtraQuery} = Expr) ->
+%%{Kind,Field,RelatedField } 'has-many': ZeroMore 0..n
+build_constraints({'ZeroMore', {Field,RelationKey} }, {ToType, Query}, _FromEntity, _FromTable, #{extra_query := ExtraQuery} = Expr) ->
     Expr#{extra_query => ExtraQuery ++ [{ToType, RelationKey, Query}]
         ,extra_info => #{id_field => Field}};
 

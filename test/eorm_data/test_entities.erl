@@ -174,9 +174,8 @@ aui_entity() ->
         db_connection => Conn1,
         table => purchTable,
         fields =>[purchId,purchName],
-        pk => recid,
-        relations =>      %%{Kind,Field,RelatedField }
-        #{ purchLine => {'has-many',{purchId,purchId}}}
+        pk => recid
+
     }),
 
 
@@ -187,12 +186,12 @@ aui_entity() ->
         fields =>[purchId,inventDimId,itemId],
         pk => recid,
         relations =>
-            #{  inventDim => {'has-one' , [
+            #{  inventDim => {'ZeroOne', [
                 %%{Kind,Field,RelatedField }
                 {normal ,inventDimId,inventDimId}
             ]},
 
-            purchTable => {'belongs-to', [
+            purchTable => {'ExactlyOne', [
                 {normal,purchId,purchId}
             ]}
         }
