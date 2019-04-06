@@ -81,9 +81,16 @@ select_has_one_test(_Config) ->
 
 select_relates_has_many_test(_Config) ->
     Query =#{
+        fields => [purchId,purchName],
         with => [
-            {purchLine,#{with =>[inventDim]}
+            {purchLine,#{
+                fields => [purchId,itemId],
+                with =>[
+                      {inventDim,#{fields =>[inventDimId,inventBatchId]}
+                      }
+               ]}
             }
+
         ],
         where => #{
             recid => 22565440432
