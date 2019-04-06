@@ -126,7 +126,13 @@ def_entity(InType, InEntity) ->
     true = ets:insert(?MODULE, {{type, Type}, UpdEntity}).
 
 
-get_type(DataSourceName,Query) when is_map(Query)->
+get_type(WithItem,Query) when is_map(Query)->
+    DataSourceName =
+        case WithItem of
+            {Name,_WithQuery} -> Name;
+            Name -> Name
+        end,
+
     case maps:get(meta,Query,nil) of
         nil -> DataSourceName;
         Meta ->
