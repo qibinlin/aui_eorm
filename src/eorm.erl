@@ -168,13 +168,10 @@ get_entity(Type) ->
 
 get_entity(DataSourceName,Query) when is_map(Query)->
     Type = get_type(DataSourceName,Query),
-    '-get_entity'(Type).
+    '-get_entity'( eorm_utils:to_binary(Type)).
 
 %% @doc @private
-'-get_entity'(Type) when is_atom(Type) ->
-    '-get_entity'(atom_to_binary(Type, utf8));
-
-'-get_entity'(Type) ->
+'-get_entity'(Type) when is_binary(Type)->
     case ets:member(?MODULE, {type, Type}) of
         true ->
             [{{type, _Type}, Entity}] =  ets:lookup(?MODULE, {type, Type}),
