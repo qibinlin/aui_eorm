@@ -87,8 +87,8 @@ get_connection(#{
         db_connection:=Connection,
         db_adapter:=Adapter} = _Entity, _Query) ->
     {Adapter, Connection};
-get_connection(_Entity, _Query) ->
-    throw({bad_entity, no_connection}).
+get_connection(_Entity, _Query) -> undefined.
+    %%throw({bad_entity, no_connection}).
 
 reflect_table(#{fields := Fields} = Entity) ->
     Entity#{
