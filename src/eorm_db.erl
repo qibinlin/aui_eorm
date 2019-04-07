@@ -7,13 +7,13 @@
 %% @end
 
 delete(ReplyType, Query) when not is_map(ReplyType) ->
-    Entity = eorm:get_entity(ReplyType,Query),
+    Entity = eorm:get_entity(ReplyType),
     delete(Entity, Query);
 delete(Entity, Query) ->
     delete(undefined, Entity, Query).
 
 delete(Connection, ReplyType, Query) when not is_map(ReplyType) ->
-    Entity = eorm:get_entity(ReplyType,Query),
+    Entity = eorm:get_entity(ReplyType),
     delete(Connection, Entity, Query);
 
 delete(Conn, Entity, InQuery) ->
@@ -43,13 +43,13 @@ delete(Conn, Entity, InQuery) ->
 %%==================================================
 
 select(ReplyType, Query) when not is_map(ReplyType) ->
-    Entity = eorm:get_entity(ReplyType,Query),
+    Entity = eorm:get_entity(ReplyType),
     select(Entity, Query);
 select(Entity, Query) ->
     select(undefined, Entity, Query).
 
 select(Connection, ReplyType, Query) when not is_map(ReplyType) ->
-    Entity = eorm:get_entity(ReplyType,Query),
+    Entity = eorm:get_entity(ReplyType),
     select(Connection, Entity, Query);
 
 select(Conn, Entity, InQuery) ->
@@ -73,7 +73,7 @@ select(Conn, Entity, InQuery) ->
                 erlz:partial(fun exec_query/3, [Connection, SqlQuery, Bindings])
                 ,fun(Rows) ->
                     Objs = lists:map(
-                        fun(Row) -> row_to_object({Fields,Query} , Row) end, Rows),
+                        fun(Row) -> row_to_object(Fields, Row) end, Rows),
                     {ok, Objs}
                 end
                 % TODO: add supporting as_sql
@@ -81,14 +81,12 @@ select(Conn, Entity, InQuery) ->
             ])
     end.
 
-row_to_object({Fields,Query}, InRow) ->
+row_to_object(Fields, InRow) ->
     {[Obj|Objs], _} = lists:foldl(
-        fun({{Type,_}, TFields}, {Acc, Row}) ->
+        fun({{Type,_Table,DataSourceName}, TFields}, {Acc, Row}) ->
             Head = lists:sublist(Row, 1, length(TFields)),
             Tail = lists:sublist(Row, length(TFields)+1, length(Row)),
             Attrs = maps:from_list(Head),
-
-            DataSourceName = eorm:get_dataSourceName_by_type(Type,Query),
 
             Obj = eorm:transform_from(db, eorm_object:new({Type,DataSourceName}, Attrs)),
             {Acc ++ [Obj], Tail}
@@ -163,7 +161,7 @@ insert(Obj, Query) ->
     insert(undefined, Obj, Query).
 
 insert(Conn, Obj, InQuery) ->
-    Entity = eorm:get_entity(eorm_object:type(Obj),InQuery),
+    Entity = eorm:get_entity(eorm_object:type(Obj)),
     DbObj = eorm:transform_to(db, Obj),
     State = eorm_builder_insert:build(Entity, DbObj, InQuery),
     #{
@@ -198,7 +196,7 @@ update(Obj, Query) ->
     update(undefined, Obj, Query).
 
 update(Conn, Obj, InQuery) ->
-    Entity = eorm:get_entity(eorm_object:type(Obj),InQuery),
+    Entity = eorm:get_entity(eorm_object:type(Obj)),
     DbObj = eorm:transform_to(db, Obj),
     State = eorm_builder_update:build(Entity, DbObj, InQuery),
     #{

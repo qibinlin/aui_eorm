@@ -25,10 +25,10 @@ build(#{
         fun(WithItem, Expr) ->
             case WithItem of
                 {Name,WithQuery} ->
-                    ToType = eorm:get_type(Name,Query),
+                    ToType = eorm_utils:to_binary(Name),
                     build_with({ToType,WithQuery}, FromEntity, FromTable, Expr);
                 Name ->
-                    ToType = eorm:get_type(Name,Query),
+                    ToType = eorm_utils:to_binary(Name),
                     build_with(ToType, FromEntity, FromTable, Expr)
             end
 
@@ -47,12 +47,11 @@ build_sql(#{expr:=#{sql := SQL, joins := Joins} = Expr} = State) ->
 
 
 %% @doc modified on 2019-3-28 by linqibin
-build_with({InToType_Orig, Query}, FromEntity, FromTable, Expr) ->
-    InToType = eorm:get_type(InToType_Orig, Query),
+build_with({InToType, Query}, FromEntity, FromTable, Expr) ->
 
     case maps:get(relations,FromEntity,undefined) of
         undefined ->
-            ToEntity = eorm:get_entity(InToType,Query),
+            ToEntity = eorm:get_entity(InToType),
             case maps:get(relations,ToEntity,undefined) of
                 undefined ->
                     %%
@@ -75,7 +74,7 @@ build_with({InToType_Orig, Query}, FromEntity, FromTable, Expr) ->
 
         Relations ->
             ToType = eorm_utils:to_binary(InToType),
-            Constraints = maps:get(InToType, Relations, undefined),
+            Constraints = maps:get(eorm_utils:to_atom(InToType), Relations, undefined),
             build_constraints(Constraints, {ToType, Query}, FromEntity, FromTable, Expr)
 
     end;
@@ -128,7 +127,7 @@ build_constraints({'ZeroOne',Constraints}, {ToType, Query}, FromEntity, FromTabl
         type := FromType,
         pk := FromPk
     } = FromEntity,
-    ToEntity = eorm:get_entity(ToType,Query),
+    ToEntity = eorm:get_entity(ToType),
     #{
         'query' := #{table := ToTable},
         expr := UpdExpr
@@ -149,7 +148,7 @@ build_constraints({'ZeroOne',Constraints}, {ToType, Query}, FromEntity, FromTabl
 
 %% 'belongs-to' : 1
 build_constraints({'ExactlyOne', Constraints}, {ToType, Query}, _FromEntity, FromTable, Expr) ->
-    ToEntity = eorm:get_entity(ToType,Query),
+    ToEntity = eorm:get_entity(ToType),
     #{pk := ToPk} = ToEntity,
 
     #{
@@ -183,7 +182,7 @@ build_constraints(undefined, {ToType, _Query}, #{type:=FromType} = _FromEntity, 
 %%=========add on 2019-3-28 end============
 
 build_relation({'belongs-to', RelationKey}, {ToType, Query}, _FromEntity, FromTable, Expr) ->
-    ToEntity = eorm:get_entity(ToType,Query),
+    ToEntity = eorm:get_entity(ToType),
     #{pk := ToPk} = ToEntity,
 
     #{
@@ -205,7 +204,7 @@ build_relation({'has-one', RelationKey}, {ToType, Query}, FromEntity, FromTable,
         type := FromType,
         pk := FromPk
     } = FromEntity,
-    ToEntity = eorm:get_entity(ToType,Query),
+    ToEntity = eorm:get_entity(ToType),
     #{
         'query' := #{table := ToTable},
         expr := UpdExpr

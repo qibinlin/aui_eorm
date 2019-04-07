@@ -1,13 +1,16 @@
 -module(ts).
 
 -export([
-    t1/0,t2/0,t3/0
+    t1/0
 
 ]).
 
 -define(MAX_CHUNKS, 2).
 
-t2_1() ->
+
+
+%% @doc @private
+def_entity() ->
 
     {ok, Conn1} = epgsql:connect(
         "127.0.0.1", "dbuser", "dbpassword", [
@@ -33,9 +36,8 @@ t2_1() ->
         db_connection => Conn1,
         table => purchTable,
         fields =>[purchId,purchName],
-        pk => recid,
-        relations =>      %%{Kind,Field,RelatedField }
-            #{ purchLine => {'has-many',{purchId,purchId}}}
+        pk => recid
+
     }),
 
 
@@ -46,96 +48,39 @@ t2_1() ->
         fields =>[purchId,inventDimId,itemId],
         pk => recid,
         relations =>
-            #{  inventDim => {'has-one' , [
-                %%{Kind,Field,RelatedField }
-                {normal ,inventDimId,inventDimId}
-                ]},
+        #{  inventDim => {'ZeroOne', [
+            %%{Kind,Field,RelatedField }
+            {normal ,inventDimId,inventDimId}
+        ]},
 
-                purchTable => {'belongs-to', [
-                    {normal,purchId,purchId}
-                ]}
-            }
+            purchTable => {'ExactlyOne', [
+                {normal,purchId,purchId}
+            ]}
+        }
 
     }).
-
-t3() ->
-    ts_helper:init_per_suite([]),
-
-    t2_1(),
-
-    Query = #{
-        with => ["PurchTable","InventDimPurch"],
-        where => #{
-            recid => 5637296829
-        },
-        meta => #{dataSources =>[
-            {"PurchTable",purchTable},
-            {"InventDimPurch",inventDim},
-            {"PurchLine",purchLine}
-        ] }
-    },
-    {ok, SQL} = eorm_db:select("PurchLine", Query#{as_sql => true}),
-    io:format("SQL: ~p", [SQL]),
-
-    {ok, Obj} = eorm_db:select("PurchLine", Query),
-    io:format("Obj: ~p", [Obj]),
-
-    ModelCollections = eorm_object:to_modelCollections(Obj),
-
-    io:format("ModelCollections: ~p", [ModelCollections]),
-
-    ok.
-
-
-t2() ->
-    ts_helper:init_per_suite([]),
-
-    t2_1(),
-
-    Query = #{
-        with => [inventDim],
-        where => #{
-            recid => 5637296829
-        }
-    },
-    {ok, SQL} = eorm_db:select(purchLine, Query#{as_sql => true}),
-    io:format("purchLine SQL: ~p ~n", [SQL]),
-
-    {ok, Obj} = eorm_db:select(purchLine, Query),
-    io:format("purchLine Obj: ~p ~n", [Obj]),
-
-
-
-    %% purchTable
-    Query2 =#{
-
-        with => [
-            {purchLine,#{with =>[inventDim]}
-            }
-        ],
-        where => #{
-            recid => 22565440432
-        }
-    },
-    {ok, SQL2} = eorm_db:select(purchTable,Query2#{as_sql => true} ),
-
-    io:format("purchTable SQL2: ~p ~n", [SQL2]),
-
-    {ok, Obj2} = eorm_db:select(purchTable, Query2),
-    io:format("purchTable Obj2: ~p ~n", [Obj2]).
-
-
 
 t1() ->
     ts_helper:init_per_suite([]),
 
-    {ok, [UserObj]} = eorm_db:select(
-        user, #{
-            with => [post],
-            where => #{
-                id => 1
-            }
-        }),
-    io:format("UserObj: ~p", [UserObj]),
+    def_entity(),
+    Query = #{
+        with => [{inventDim,#{ds =>"InventDimPurch"}}],
+        where => #{
+            recid => 5637296829
+        }
+        ,ds =>"PurchLine_ds"
+    },
+    {ok, SQL} = eorm_db:select(purchLine, Query#{as_sql => true}),
+    ct:log("SQL: ~p", [SQL]),
+
+    {ok, Obj} = eorm_db:select(purchLine, Query),
+    ct:log("Obj: ~p", [Obj]),
+
+    DataSet = eorm_object:to_dataSet([Obj]),
+
+    ct:log("DataSet: ~p", [DataSet]),
+
     ok.
+
 %%====================

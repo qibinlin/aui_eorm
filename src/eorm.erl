@@ -9,7 +9,7 @@
     ,get_table/2
     ,get_connection/2
     ,def_entity/2
-    ,get_entity/2,get_type/2,get_dataSourceName_by_type/2
+    ,get_entity/1
     ,transform_to/2
     ,transform_from/2
 
@@ -125,52 +125,7 @@ def_entity(InType, InEntity) ->
 
     true = ets:insert(?MODULE, {{type, Type}, UpdEntity}).
 
-
-get_type(WithItem,Query) when is_map(Query)->
-    DataSourceName =
-        case WithItem of
-            {Name,_WithQuery} -> Name;
-            Name -> Name
-        end,
-
-    case maps:get(meta,Query,nil) of
-        nil -> DataSourceName;
-        Meta ->
-            case maps:get(dataSources,Meta,nil) of
-                nil ->  DataSourceName ;
-                DataSources ->
-                    Type = proplists:get_value(DataSourceName,DataSources),
-                    Type
-            end
-
-    end.
-
-get_dataSourceName_by_type(Type,Query) when is_map(Query)->
-    case maps:get(meta,Query,nil) of
-        nil -> eorm_utils:to_binary(Type) ;
-        Meta ->
-            case maps:get(dataSources,Meta,nil) of
-                nil ->  eorm_utils:to_binary(Type) ;
-                DataSources ->
-                    '-get_dataSourceName_by_type'(DataSources,Type)
-            end
-
-    end;
-get_dataSourceName_by_type(Type,_Query) -> eorm_utils:to_binary(Type).
-
-%% @doc @private
-'-get_dataSourceName_by_type'([{K,V} | T],Type) ->
-    VBin = eorm_utils:to_binary(V),
-    TypeBin= eorm_utils:to_binary(Type),
-    if
-        VBin =:= TypeBin -> eorm_utils:to_binary(K);
-        true -> '-get_dataSourceName_by_type'(T,Type)
-    end;
-
-'-get_dataSourceName_by_type'([],Type) -> eorm_utils:to_binary(Type).
-
-get_entity(DataSourceName,Query) when is_map(Query)->
-    Type = get_type(DataSourceName,Query),
+get_entity(Type) ->
     '-get_entity'( eorm_utils:to_binary(Type)).
 
 %% @doc @private

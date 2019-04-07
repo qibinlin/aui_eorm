@@ -80,13 +80,16 @@ build_fields(#{entity :=Entity, 'query' := Query, expr := Expr} = State) ->
     #{type := Type, fields := DefFields} = Entity,
     #{fields := ExprFields} = Expr,
     DbFields = maps:get(fields, Query, DefFields),
-    UpdExprFields = ExprFields ++ [{{Type, Table}, DbFields}],
+    %%
+    DataSourceName = eorm_utils:to_binary( maps:get(ds,Query,Type) ),
+    UpdExprFields = ExprFields ++ [{{Type, Table,DataSourceName}, DbFields}],
+    %%
     State#{expr => Expr#{fields => UpdExprFields}}.
 
 build_fields_sql(#{expr := #{fields:=Fields, sql := Sql} = Expr} = State) ->
     SQLFields = eorm_utils:binary_join(
         lists:foldl(
-            fun({{_Type, Table}, Fs}, Acc) ->
+            fun({{_Type, Table,_DataSourceName}, Fs}, Acc) ->
                 Acc ++ lists:map(
                     erlz:partial(fun build_field/2, [Table]),
                     Fs)
